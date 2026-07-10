@@ -19,10 +19,121 @@
       <div class="composer-wrap">
         <div class="quick-tabs" aria-label="快捷工具">
           <span>提示词生成</span>
-          <button class="quick-tab is-active" type="button">选品工具</button>
+          <button id="productToolTab" class="quick-tab is-active" type="button">选品工具</button>
           <button class="quick-tab" type="button">对标选品</button>
           <button class="quick-tab" type="button">选品方法</button>
         </div>
+
+        <section id="productToolPanel" class="tool-panel" aria-label="选品工具参数面板" hidden>
+          <header class="tool-panel-header">
+            <h2>选品工具</h2>
+            <button id="closeProductToolBtn" class="icon-btn" type="button" title="关闭" aria-label="关闭选品工具">
+              <i data-lucide="x" width="16" height="16"></i>
+            </button>
+          </header>
+
+          <div class="tool-panel-body">
+            <div class="tool-field">
+              <label>场景</label>
+              <div class="scene-tabs" role="tablist" aria-label="选品场景">
+                <button class="scene-tab is-active" type="button" data-scene="产品">产品</button>
+                <button class="scene-tab" type="button" data-scene="关键词">关键词</button>
+                <button class="scene-tab" type="button" data-scene="市场">市场</button>
+                <button class="scene-tab" type="button" data-scene="评论">评论</button>
+                <button class="scene-tab" type="button" data-scene="合规">合规</button>
+                <button class="scene-tab" type="button" data-scene="其他">其他</button>
+              </div>
+            </div>
+
+            <div class="tool-grid">
+              <div class="tool-field">
+                <label for="toolPlatform">平台</label>
+                <select id="toolPlatform">
+                  <option value="TikTok Shop">TikTok Shop</option>
+                  <option value="Amazon">Amazon</option>
+                  <option value="Shopify">Shopify</option>
+                </select>
+              </div>
+              <div class="tool-field">
+                <label for="toolRegion">站点</label>
+                <select id="toolRegion">
+                  <option value="美国">美国</option>
+                  <option value="英国">英国</option>
+                  <option value="泰国">泰国</option>
+                  <option value="越南">越南</option>
+                  <option value="马来西亚">马来西亚</option>
+                  <option value="菲律宾">菲律宾</option>
+                  <option value="新加坡">新加坡</option>
+                  <option value="印尼">印尼</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="tool-field">
+              <label for="toolName">工具</label>
+              <select id="toolName">
+                <option value="EchoTik-TikTok商品搜索">EchoTik-TikTok商品搜索</option>
+              </select>
+            </div>
+
+            <div class="tool-field">
+              <label for="toolKeyword">商品关键词</label>
+              <input id="toolKeyword" type="text" value="公路自行车" placeholder="请输入商品关键词">
+            </div>
+
+            <div class="tool-field category-field">
+              <label for="categoryTrigger">商品分类</label>
+              <button id="categoryTrigger" class="category-trigger" type="button" aria-expanded="false">
+                <span id="categoryTags" class="category-tags"></span>
+                <span class="category-placeholder">可选，不选则覆盖全部类目</span>
+                <i data-lucide="chevron-down" width="16" height="16"></i>
+              </button>
+              <div id="categoryMenu" class="category-menu" hidden>
+                <div id="categoryOptions" class="category-options"></div>
+                <div class="category-footer">
+                  <span id="categoryCount">已选 0 个</span>
+                  <div class="category-actions">
+                    <button id="clearCategoryBtn" type="button">清空</button>
+                    <button id="confirmCategoryBtn" type="button">确认</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tool-grid compact">
+              <div class="tool-field">
+                <label for="toolSortBy">排序字段</label>
+                <select id="toolSortBy">
+                  <option value="总销量">总销量</option>
+                  <option value="总GMV">总GMV</option>
+                  <option value="近30天销量">近30天销量</option>
+                  <option value="近7天销量">近7天销量</option>
+                  <option value="SKU均价">SKU均价</option>
+                </select>
+              </div>
+              <div class="tool-field">
+                <label for="toolSortOrder">排序方式</label>
+                <select id="toolSortOrder">
+                  <option value="降序">降序</option>
+                  <option value="升序">升序</option>
+                </select>
+              </div>
+              <div class="tool-field">
+                <label for="toolPage">页码</label>
+                <input id="toolPage" type="number" min="1" value="1">
+              </div>
+              <div class="tool-field">
+                <label for="toolPageSize">每页条数</label>
+                <input id="toolPageSize" type="number" min="1" value="50">
+              </div>
+            </div>
+          </div>
+
+          <footer class="tool-panel-footer">
+            <button id="resetProductToolBtn" class="ghost-btn" type="button">重置</button>
+            <button id="generatePromptBtn" class="primary-btn" type="button">生成提示词</button>
+          </footer>
+        </section>
 
         <div class="composer">
           <textarea id="promptInput" class="prompt-input" spellcheck="false">@EchoTik-TikTok商品搜索 在 TikTok Shop，美国站，商品关键词 自行车，商品分类 运动与户外，按 总销量 排序，排序方式 降序，第 1 页，每页 50 条。</textarea>
