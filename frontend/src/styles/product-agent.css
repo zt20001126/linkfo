@@ -270,7 +270,7 @@
 .tool-panel {
   position: fixed;
   top: 22px;
-  bottom: 22px;
+  bottom: clamp(232px, 29vh, 312px);
   left: 22px;
   z-index: 8;
   display: flex;
@@ -838,7 +838,10 @@ tbody tr:hover td {
   }
 
   .tool-panel {
-    inset: 12px;
+    top: 12px;
+    right: 12px;
+    bottom: clamp(172px, 31vh, 232px);
+    left: 12px;
     width: auto;
   }
 
