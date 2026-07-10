@@ -1,0 +1,35 @@
+services:
+  linkfox-postgres:
+    image: postgres:16-alpine
+    container_name: linkfox-postgres
+    environment:
+      POSTGRES_DB: linkfox
+      POSTGRES_USER: linkfox
+      POSTGRES_PASSWORD: linkfox_dev_password
+    ports:
+      - "15432:5432"
+    volumes:
+      - linkfox_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linkfox -d linkfox"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  linkfox-redis:
+    image: redis:7-alpine
+    container_name: linkfox-redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - linkfox_redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  linkfox_postgres_data:
+  linkfox_redis_data:
