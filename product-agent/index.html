@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选品Agent</title>
+  <link rel="stylesheet" href="./src/styles/base.css">
+  <link rel="stylesheet" href="./src/styles/product-agent.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="agent-pane" aria-label="选品助手输入区">
+      <div class="agent-intro">
+        <h1 class="agent-title">选品Agent</h1>
+        <p class="agent-subtitle">跨境电商选品Agent助手，帮你找出“值得做的产品”</p>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="quick-tabs" aria-label="快捷工具">
+          <span>提示词生成</span>
+          <button class="quick-tab is-active" type="button">选品工具</button>
+          <button class="quick-tab" type="button">对标选品</button>
+          <button class="quick-tab" type="button">选品方法</button>
+        </div>
+
+        <div class="composer">
+          <textarea id="promptInput" class="prompt-input" spellcheck="false">@EchoTik-TikTok商品搜索 在 TikTok Shop，美国站，商品关键词 自行车，商品分类 运动与户外，按 总销量 排序，排序方式 降序，第 1 页，每页 50 条。</textarea>
+          <div class="composer-tools">
+            <div class="tool-left">
+              <button class="icon-btn" type="button" title="添加附件" aria-label="添加附件">
+                <i data-lucide="plus" width="17" height="17"></i>
+              </button>
+            </div>
+            <div class="tool-right">
+              <button class="agent-select" type="button">
+                选品Agent
+                <i data-lucide="chevron-down" width="14" height="14"></i>
+              </button>
+              <button id="runBtn" class="send-btn" type="button" title="执行查询" aria-label="执行查询">
+                <i data-lucide="arrow-up" width="18" height="18"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <span><i data-lucide="book-open" width="13" height="13"></i>词库</span>
+          <span><i data-lucide="briefcase-business" width="13" height="13"></i>商品库</span>
+          <span><i data-lucide="blocks" width="13" height="13"></i>技能</span>
+        </div>
+        <p class="ai-note">页面为前端原型，真实数据接口待需求确认后接入</p>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="候选产品工作区">
+      <div class="workspace-header">选品Agent</div>
+
+      <div class="product-surface">
+        <div class="surface-tabs">
+          <div class="tab-title">候选产品</div>
+          <div class="surface-actions">
+            <button id="addSelectedBtn" class="ghost-btn" type="button">
+              <i data-lucide="plus" width="16" height="16"></i>
+              加入候选产品
+            </button>
+            <button id="clearBtn" class="icon-btn" type="button" title="清空列表" aria-label="清空列表">
+              <i data-lucide="trash-2" width="16" height="16"></i>
+            </button>
+            <button class="icon-btn" type="button" title="全屏" aria-label="全屏">
+              <i data-lucide="maximize-2" width="16" height="16"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="filters">
+          <div class="field">
+            <label for="timeFilter">加入时间</label>
+            <select id="timeFilter">
+              <option value="all">全部</option>
+              <option value="today">今天</option>
+              <option value="7d">近 7 天</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="statusFilter">状态</label>
+            <select id="statusFilter">
+              <option value="all">全部</option>
+              <option value="pending">待定</option>
+              <option value="saved">已加入</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="keywordFilter">关键词</label>
+            <input id="keywordFilter" type="search" placeholder="输入商品名或关键词">
+          </div>
+        </div>
+
+        <div class="advanced-row">
+          <button class="advanced-toggle" type="button">
+            高级筛选
+            <i data-lucide="chevron-right" width="15" height="15"></i>
+          </button>
+          <div class="query-preview">
+            <span>识别参数</span>
+            <div id="chipList" class="chip-list"></div>
+          </div>
+        </div>
+
+        <div class="table-section">
+          <div class="section-heading">
+            <h2>产品列表</h2>
+            <div class="summary">
+              <span id="resultCount">0 个产品</span>
+              <span class="dot"></span>
+              <span id="candidateCount">0 个已加入候选</span>
+            </div>
+          </div>
+
+          <div id="emptyState" class="empty">
+            <div>
+              <strong>还没有产品数据</strong><br>
+              在左侧输入提示词后点击发送，页面会先用模拟数据展示查询结果。
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table aria-label="候选产品列表">
+              <colgroup>
+                <col class="col-check">
+                <col class="col-image">
+                <col class="col-title">
+                <col class="col-id">
+                <col class="col-platform">
+                <col class="col-status">
+                <col class="col-sales">
+                <col class="col-sales-30d">
+                <col class="col-price">
+                <col class="col-rating">
+                <col class="col-keyword">
+                <col class="col-time">
+                <col class="col-actions">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="check-cell"><input id="selectAll" type="checkbox" aria-label="全选"></th>
+                  <th>主图</th>
+                  <th>标题</th>
+                  <th>商品编号</th>
+                  <th>平台</th>
+                  <th>状态</th>
+                  <th>总销量 ↓</th>
+                  <th>30天销量</th>
+                  <th>均价</th>
+                  <th>评分</th>
+                  <th>关键词</th>
+                  <th>加入时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="productBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status">
+    <i data-lucide="check-circle-2" width="17" height="17"></i>
+    <span id="toastText">已更新</span>
+  </div>
+
+  <script src="./src/scripts/mock-products.js"></script>
+  <script src="./src/scripts/prompt-parser.js"></script>
+  <script src="./src/scripts/product-agent.js"></script>
+</body>
+</html>
