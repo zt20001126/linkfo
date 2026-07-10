@@ -34,9 +34,9 @@ async def search_products(
 ) -> ApiResponse:
     """选品搜索路由，负责请求绑定并委托业务服务。"""
 
-    data = await service.search(request)
+    outcome = await service.search(request)
     return build_success_response(
-        code="BACKEND_SKELETON_READY",
-        message="后端基础框架已连通，EchoTik API 调用尚未实现",
-        data=data,
+        code=outcome.code,
+        message=outcome.message,
+        data=outcome.data.model_dump(by_alias=True, exclude_none=True),
     )
