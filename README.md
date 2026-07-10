@@ -1,13 +1,13 @@
 # Linkfox Product Agent
 
-这是一个选品 Agent 原型项目，当前包含前端静态页面和后端基础框架。
+这是一个“选品 Agent”前后端分离原型项目，当前包含原生静态前端和 Python FastAPI 后端。
 
 ## 项目结构
 
 ```text
 linkfox/
   frontend/   前端页面原型
-  backend/    后端 Node.js 服务骨架
+  backend/    Python FastAPI 后端服务
 ```
 
 ## 前端启动
@@ -34,7 +34,7 @@ frontend/index.html
 
 ## 后端启动
 
-后端使用 Node.js 原生 HTTP 服务，当前不需要安装第三方依赖。
+后端使用 Python FastAPI。
 
 进入后端目录：
 
@@ -42,10 +42,18 @@ frontend/index.html
 cd backend
 ```
 
+创建虚拟环境并安装依赖：
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
 启动服务：
 
 ```bash
-npm start
+uvicorn app.main:app --host 127.0.0.1 --port 8787
 ```
 
 默认后端地址：
@@ -56,10 +64,9 @@ http://127.0.0.1:8787
 
 ## 后端检查
 
-检查 JS 语法：
-
 ```bash
-npm run check
+python -m compileall app tests
+python -m pytest
 ```
 
 健康检查接口：
@@ -75,7 +82,7 @@ GET  http://127.0.0.1:8787/api/agent/capabilities
 POST http://127.0.0.1:8787/api/agent/product-search
 ```
 
-`POST /api/agent/product-search` 当前只返回占位数据，EchoTik API 调用尚未实现。
+`POST /api/agent/product-search` 当前只返回提示词解析结果和占位商品数据，EchoTik API 调用尚未实现。
 
 ## 环境变量
 
