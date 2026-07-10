@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.common.constants import MAX_PROMPT_LENGTH
+from app.common.constants import MAX_PAGE, MAX_PAGE_SIZE, MAX_PROMPT_LENGTH
 
 
 class ProductSearchRequest(BaseModel):
@@ -59,18 +59,30 @@ class ProductSearchQuery(BaseModel):
     sort_by: str = Field(..., alias="sortBy", description="排序字段业务值")
     echotik_sort_field: int = Field(..., alias="echotikSortField", description="EchoTik 排序字段枚举值")
     sort_order: str = Field(..., alias="sortOrder", description="排序方向，asc 或 desc")
-    page: int = Field(..., ge=1, description="查询页码")
-    page_size: int = Field(..., alias="pageSize", ge=1, description="每页返回数量")
+    page: int = Field(..., ge=1, le=MAX_PAGE, description="查询页码，遵守 EchoTik 最大页码限制")
+    page_size: int = Field(..., alias="pageSize", ge=1, le=MAX_PAGE_SIZE, description="每页返回数量，遵守 EchoTik 最大每页数量")
+
+
+class ProductCategoryMappingDTO(BaseModel):
+    """分类映射 DTO，用于在 service、repository 和 cache 之间传递 EchoTik 分类 ID。"""
+
+    category_name: str = Field(..., description="用户输入或运营维护的分类名称")
+    category_id: str | None = Field(default=None, description="EchoTik 一级分类 ID")
+    category_l2_id: str | None = Field(default=None, description="EchoTik 二级分类 ID")
+    category_l3_id: str | None = Field(default=None, description="EchoTik 三级分类 ID")
 
 
 class EchoTikProductListParams(BaseModel):
     """EchoTik 商品列表参数，用于后续真实商品 API 请求。"""
 
     region: str = Field(..., description="EchoTik 站点地区编码")
-    page_num: int = Field(..., ge=1, description="EchoTik 页码参数")
-    page_size: int = Field(..., ge=1, description="EchoTik 每页数量参数")
+    page_num: int = Field(..., ge=1, le=MAX_PAGE, description="EchoTik 页码参数，最大值按官方文档限制")
+    page_size: int = Field(..., ge=1, le=MAX_PAGE_SIZE, description="EchoTik 每页数量参数，最大值按官方文档限制")
     product_sort_field: int = Field(..., description="EchoTik 商品排序字段")
     sort_type: int = Field(..., description="EchoTik 排序方向枚举，0 升序，1 降序")
+    category_id: str | None = Field(default=None, description="EchoTik 一级分类 ID，只有映射确认后才提交")
+    category_l2_id: str | None = Field(default=None, description="EchoTik 二级分类 ID，只有映射确认后才提交")
+    category_l3_id: str | None = Field(default=None, description="EchoTik 三级分类 ID，只有映射确认后才提交")
 
 
 class EchoTikProductSearchResult(BaseModel):
@@ -94,3 +106,11 @@ class ProductSearchData(BaseModel):
         description="准备提交给 EchoTik 的查询参数",
     )
     items: list[dict[str, Any]] = Field(default_factory=list, description="商品搜索结果列表")
+
+
+class ProductSearchOutcome(BaseModel):
+    """选品搜索服务输出，用于让 route 保持薄封装并复用统一响应结构。"""
+
+    code: str = Field(..., description="业务响应码，真实 EchoTik 接入启用时返回 SUCCESS")
+    message: str | None = Field(default=None, description="面向前端的安全提示信息")
+    data: ProductSearchData = Field(..., description="选品搜索响应数据")

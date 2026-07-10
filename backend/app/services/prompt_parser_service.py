@@ -7,8 +7,10 @@ from app.common.constants import (
     DEFAULT_PAGE_SIZE,
     DEFAULT_REGION,
     DESC_SORT_TYPE,
+    MAX_PAGE,
+    MAX_PAGE_SIZE,
 )
-from app.schemas.product_search import EchoTikProductListParams, ProductSearchQuery
+from app.schemas.product_search import EchoTikProductListParams, ProductCategoryMappingDTO, ProductSearchQuery
 
 
 @dataclass(frozen=True)
@@ -64,15 +66,20 @@ class PromptParserService:
             sortBy=sort_field.value,
             echotikSortField=sort_field.echotik_value or SORT_FIELD_OPTIONS[0].echotik_value,
             sortOrder="desc" if "降序" in prompt else "asc",
-            page=self._read_number(prompt, r"第\s*(\d+)\s*页", DEFAULT_PAGE),
-            pageSize=self._read_number(prompt, r"每页\s*(\d+)\s*条", DEFAULT_PAGE_SIZE),
+            page=self._read_number(prompt, r"第\s*(\d+)\s*页", DEFAULT_PAGE, MAX_PAGE),
+            pageSize=self._read_number(prompt, r"每页\s*(\d+)\s*条", DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE),
         )
 
-    def build_echotik_product_list_params(self, query: ProductSearchQuery) -> EchoTikProductListParams:
+    def build_echotik_product_list_params(
+        self,
+        query: ProductSearchQuery,
+        category_mapping: ProductCategoryMappingDTO | None = None,
+    ) -> EchoTikProductListParams:
         """构造 EchoTik 商品列表参数。
 
         Step 1: 透传已识别的地区和分页参数。
         Step 2: 把后端业务排序方向转换成 EchoTik sort_type 枚举。
+        Step 3: 只有分类映射已确认时才提交 EchoTik 分类 ID，不伪造关键词字段。
         """
 
         return EchoTikProductListParams(
@@ -81,6 +88,9 @@ class PromptParserService:
             page_size=query.page_size,
             product_sort_field=query.echotik_sort_field,
             sort_type=DESC_SORT_TYPE if query.sort_order == "desc" else ASC_SORT_TYPE,
+            category_id=category_mapping.category_id if category_mapping else None,
+            category_l2_id=category_mapping.category_l2_id if category_mapping else None,
+            category_l3_id=category_mapping.category_l3_id if category_mapping else None,
         )
 
     def _find_option(self, options: list[PromptOption], text: str) -> PromptOption | None:
@@ -94,9 +104,11 @@ class PromptParserService:
         matched = re.search(pattern, text)
         return matched.group(1).strip() if matched else fallback
 
-    def _read_number(self, text: str, pattern: str, fallback: int) -> int:
-        """按正则读取正整数，避免无效分页值进入 EchoTik 参数。"""
+    def _read_number(self, text: str, pattern: str, fallback: int, max_value: int) -> int:
+        """按正则读取正整数，并按 EchoTik 文档限制裁剪分页值。"""
 
         raw_value = self._read_text(text, pattern, str(fallback))
         number = int(raw_value)
-        return number if number > 0 else fallback
+        if number <= 0:
+            return fallback
+        return min(number, max_value)
