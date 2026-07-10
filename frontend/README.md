@@ -9,6 +9,7 @@
 - `src/styles/product-agent.css`：选品页面样式
 - `src/scripts/mock-products.js`：前端模拟数据
 - `src/scripts/prompt-parser.js`：提示词解析和 EchoTik 查询参数映射
+- `src/scripts/prompt-builder.js`：选品工具参数到提示词模板的生成逻辑
 - `src/scripts/product-agent.js`：页面状态、渲染和交互逻辑
 
 ## 后续接入点

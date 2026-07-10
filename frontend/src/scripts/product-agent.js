@@ -264,9 +264,17 @@
       return;
     }
 
-    const categories = [...state.selectedCategories];
-    const categoryText = categories.length > 0 ? categories.join("、") : "全部类目";
-    const prompt = `@${elements.toolName.value} 在 ${elements.toolPlatform.value}，${elements.toolRegion.value}站，商品关键词 ${keyword}，商品分类 ${categoryText}，按 ${elements.toolSortBy.value} 排序，排序方式 ${elements.toolSortOrder.value}，第 ${normalizePositiveNumber(elements.toolPage.value, 1)} 页，每页 ${normalizePositiveNumber(elements.toolPageSize.value, 50)} 条。`;
+    const prompt = ProductAgentPromptBuilder.buildProductSearchPrompt({
+      toolName: elements.toolName.value,
+      platform: elements.toolPlatform.value,
+      region: elements.toolRegion.value,
+      keyword,
+      categories: [...state.selectedCategories],
+      sortBy: elements.toolSortBy.value,
+      sortOrder: elements.toolSortOrder.value,
+      page: elements.toolPage.value,
+      pageSize: elements.toolPageSize.value
+    });
 
     elements.promptInput.value = prompt;
     state.query = ProductAgentPromptParser.parsePrompt(prompt);
@@ -423,11 +431,6 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
-  }
-
-  function normalizePositiveNumber(value, fallback) {
-    const number = Number(value);
-    return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
   }
 
   function renderIcons() {
