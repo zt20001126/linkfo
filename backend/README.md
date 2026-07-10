@@ -4,7 +4,7 @@
 
 ## 目录
 
-- `app/main.py`：FastAPI 应用入口、CORS 和异常处理。
+- `app/main.py`：FastAPI 应用入口、CORS、前端静态页面挂载和异常处理。
 - `app/api/v1/routes/agent.py`：Agent 路由，保持请求绑定和 service 调用。
 - `app/common/`：统一响应、常量等基础能力。
 - `app/core/config.py`：环境变量和运行配置读取。
@@ -55,7 +55,7 @@ python -m app.db.init_db
 ## 启动
 
 ```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8787
+uvicorn app.main:app --host 127.0.0.1 --port 8787 --env-file .env
 ```
 
 默认服务地址：
@@ -64,9 +64,16 @@ uvicorn app.main:app --host 127.0.0.1 --port 8787
 http://127.0.0.1:8787
 ```
 
+打开默认服务地址 `/` 会直接返回前端静态页面。接口文档地址：
+
+```text
+http://127.0.0.1:8787/docs
+```
+
 ## 当前接口
 
 ```http
+GET /
 GET /api/health
 GET /api/agent/capabilities
 POST /api/agent/product-search

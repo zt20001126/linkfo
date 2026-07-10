@@ -55,6 +55,10 @@
     "玩具和爱好"
   ];
 
+  const DEFAULT_BACKEND_BASE_URL = "http://127.0.0.1:8787";
+  const DEFAULT_PRODUCT_IMAGE = "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=240&q=80";
+  const BACKEND_BASE_URL = resolveBackendBaseUrl();
+
   const state = {
     products: [],
     selectedIds: new Set(),
@@ -106,21 +110,109 @@
     });
   }
 
-  function runSearch() {
+  async function runSearch() {
     elements.runBtn.disabled = true;
     state.query = ProductAgentPromptParser.parsePrompt(elements.promptInput.value);
     renderQueryChips(state.query);
 
-    window.setTimeout(() => {
-      state.products = ProductAgentMockProducts.map((item) => ({
-        ...item,
-        keyword: state.query.keyword || item.keyword
-      }));
+    try {
+      const payload = await requestProductSearch(elements.promptInput.value);
+      state.products = normalizeBackendProducts(payload.data?.items || [], state.query);
       state.selectedIds.clear();
-      elements.runBtn.disabled = false;
       renderProducts();
-      showToast("已生成前端模拟查询结果，真实 EchoTik 接口待接入");
-    }, 360);
+      showToast(buildSearchToast(payload, state.products.length));
+    } catch (error) {
+      state.products = [];
+      state.selectedIds.clear();
+      renderProducts();
+      showToast(error.message || "选品查询失败，请检查后端服务");
+    } finally {
+      elements.runBtn.disabled = false;
+    }
+  }
+
+  async function requestProductSearch(prompt) {
+    const response = await fetch(`${BACKEND_BASE_URL}/api/agent/product-search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    const payload = await readJsonResponse(response);
+    if (!response.ok || !["SUCCESS", "BACKEND_SKELETON_READY"].includes(payload.code)) {
+      throw new Error(payload.message || "后端选品查询失败");
+    }
+    return payload;
+  }
+
+  async function readJsonResponse(response) {
+    try {
+      return await response.json();
+    } catch (error) {
+      throw new Error("后端响应不是有效 JSON");
+    }
+  }
+
+  function normalizeBackendProducts(items, query) {
+    return items.map((item, index) => ({
+      id: String(readFirst(item, ["id", "product_id", "productId", "spu_id"], `ECHOTIK-${index + 1}`)),
+      title: String(readFirst(item, ["title", "product_name", "productName", "name"], "未命名商品")),
+      image: String(readFirst(item, ["image", "image_url", "imageUrl", "cover", "cover_url"], DEFAULT_PRODUCT_IMAGE)),
+      platform: String(readFirst(item, ["platform"], query.platform || "TikTok Shop")),
+      totalSales: normalizeNumber(readFirst(item, ["totalSales", "total_sale_cnt", "sale_cnt", "sales"], 0)),
+      sales30d: normalizeNumber(readFirst(item, ["sales30d", "total_sale_30d_cnt", "sale_30d_cnt"], 0)),
+      price: formatProductPrice(readFirst(item, ["price", "spu_avg_price", "avg_price"], "-")),
+      rating: normalizeNumber(readFirst(item, ["rating", "score"], 0)),
+      keyword: String(readFirst(item, ["keyword"], query.keyword || "")),
+      category: String(readFirst(item, ["category", "category_name", "categoryName"], query.category || "未分类")),
+      status: "pending",
+      addedAt: String(readFirst(item, ["addedAt", "created_at", "createdAt"], formatCurrentTime()))
+    }));
+  }
+
+  function readFirst(source, keys, fallback) {
+    for (const key of keys) {
+      const value = source?.[key];
+      if (value !== undefined && value !== null && value !== "") {
+        return value;
+      }
+    }
+    return fallback;
+  }
+
+  function normalizeNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function formatProductPrice(value) {
+    if (value === "-") return value;
+    return typeof value === "number" ? `$${value.toFixed(2)}` : String(value);
+  }
+
+  function formatCurrentTime() {
+    return new Intl.DateTimeFormat("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date());
+  }
+
+  function buildSearchToast(payload, resultCount) {
+    if (payload.code === "BACKEND_SKELETON_READY") {
+      return payload.message || "后端已响应，EchoTik API 未启用";
+    }
+    return resultCount > 0 ? `已从 EchoTik 返回 ${resultCount} 个商品` : "EchoTik 已响应，但没有返回商品";
+  }
+
+  function resolveBackendBaseUrl() {
+    const apiFromQuery = new URLSearchParams(window.location.search).get("api");
+    const sameOriginApi = window.location.protocol.startsWith("http") ? window.location.origin : "";
+    const baseUrl = apiFromQuery || window.LinkfoxBackendBaseUrl || sameOriginApi || DEFAULT_BACKEND_BASE_URL;
+    return String(baseUrl).replace(/\/$/, "");
   }
 
   function renderQueryChips(query) {

@@ -12,14 +12,20 @@
 - `src/scripts/prompt-builder.js`：选品工具参数到提示词模板的生成逻辑
 - `src/scripts/product-agent.js`：页面状态、渲染和交互逻辑
 
-## 后续接入点
+## 后端接入
 
-后续确认 EchoTik 接口需求后，可以把 `product-agent.js` 里的模拟查询替换成后端接口调用，例如：
+`product-agent.js` 点击“运行选品”时会请求后端选品接口。如果页面从后端根路径打开，例如 `http://127.0.0.1:8787/`，会默认请求同一个后端服务：
 
 ```js
-fetch("/api/agent/product-search", {
+fetch("http://127.0.0.1:8787/api/agent/product-search", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ prompt: elements.promptInput.value })
 });
+```
+
+如果后端启动在其它端口，可以在打开静态页面时通过 `api` 查询参数覆盖，例如：
+
+```text
+index.html?api=http://127.0.0.1:8789
 ```

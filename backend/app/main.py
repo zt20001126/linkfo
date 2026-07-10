@@ -1,9 +1,11 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.router import api_router
@@ -13,6 +15,10 @@ from app.exceptions.business_exception import BusinessException
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+FRONTEND_INDEX = FRONTEND_DIR / "index.html"
+FRONTEND_SRC_DIR = FRONTEND_DIR / "src"
 
 app = FastAPI(title=settings.app_name)
 
@@ -25,6 +31,16 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api")
+
+if FRONTEND_SRC_DIR.exists():
+    app.mount("/src", StaticFiles(directory=FRONTEND_SRC_DIR), name="frontend-src")
+
+
+@app.get("/", include_in_schema=False)
+async def serve_frontend_index() -> FileResponse:
+    """本地开发时直接从后端根路径打开前端静态页面。"""
+
+    return FileResponse(FRONTEND_INDEX)
 
 
 @app.exception_handler(BusinessException)

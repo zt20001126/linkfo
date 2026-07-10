@@ -12,6 +12,21 @@ from app.services.echotik_product_service import EchoTikProductService
 client = TestClient(app)
 
 
+def test_root_serves_frontend_page() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "promptInput" in response.text
+
+
+def test_frontend_src_static_files_are_served() -> None:
+    response = client.get("/src/scripts/product-agent.js")
+
+    assert response.status_code == 200
+    assert "ProductAgentPromptParser" in response.text
+
+
 def test_health_returns_success() -> None:
     response = client.get("/api/health")
 
