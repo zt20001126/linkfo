@@ -1,58 +1,66 @@
 # Linkfox Product Agent
 
-这是一个“选品 Agent”前后端分离原型项目，当前包含原生静态前端和 Python FastAPI 后端。
+Linkfox 是一个“选品 Agent”前后端分离原型项目，当前包含原生静态前端和 Python FastAPI 后端。
 
 ## 项目结构
 
 ```text
 linkfox/
-  frontend/   前端页面原型
-  backend/    Python FastAPI 后端服务
+  docker-compose.yml  本地 PostgreSQL 和 Redis
+  frontend/           前端页面原型
+  backend/            Python FastAPI 后端服务
+```
+
+## 本地基础设施
+
+项目提供本地 Docker Compose 配置：
+
+```bash
+docker compose up -d linkfox-postgres linkfox-redis
+```
+
+默认端口：
+
+```text
+PostgreSQL: 127.0.0.1:15432
+Redis:      127.0.0.1:16379
+```
+
+数据库和 Redis 在后端中默认关闭，避免普通开发和测试强依赖本地服务。需要启用时复制 `backend/.env.example` 并设置：
+
+```text
+DATABASE_ENABLED=true
+REDIS_ENABLED=true
+```
+
+初始化当前表结构：
+
+```bash
+cd backend
+python -m app.db.init_db
 ```
 
 ## 前端启动
 
-前端目前是静态页面，可以用 Python 内置静态服务器启动。
-
-在项目根目录执行：
+前端当前是静态页面，可以直接打开 `frontend/index.html`，也可以用 Python 静态服务启动：
 
 ```bash
 python -m http.server 4173 --bind 127.0.0.1 --directory frontend
 ```
 
-然后在浏览器打开：
+访问：
 
 ```text
 http://127.0.0.1:4173/
 ```
 
-前端入口文件：
-
-```text
-frontend/index.html
-```
-
 ## 后端启动
-
-后端使用 Python FastAPI。
-
-进入后端目录：
 
 ```bash
 cd backend
-```
-
-创建虚拟环境并安装依赖：
-
-```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-启动服务：
-
-```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8787
 ```
 
@@ -65,37 +73,17 @@ http://127.0.0.1:8787
 ## 后端检查
 
 ```bash
+cd backend
 python -m compileall app tests
 python -m pytest
 ```
 
-健康检查接口：
+## 当前接口
 
 ```text
-GET http://127.0.0.1:8787/api/health
+GET  /api/health
+GET  /api/agent/capabilities
+POST /api/agent/product-search
 ```
 
-当前占位接口：
-
-```text
-GET  http://127.0.0.1:8787/api/agent/capabilities
-POST http://127.0.0.1:8787/api/agent/product-search
-```
-
-`POST /api/agent/product-search` 当前只返回提示词解析结果和占位商品数据，EchoTik API 调用尚未实现。
-
-## 环境变量
-
-后端环境变量示例文件：
-
-```text
-backend/.env.example
-```
-
-后续接入 EchoTik API 时，需要配置：
-
-```text
-ECHOTIK_BASE_URL
-ECHOTIK_USERNAME
-ECHOTIK_PASSWORD
-```
+`POST /api/agent/product-search` 默认只返回提示词解析结果和占位商品列表。设置 `ECHOTIK_ENABLE_REAL_API=true` 且配置 `ECHOTIK_USERNAME`、`ECHOTIK_PASSWORD` 后，后端会通过 Basic Auth 调用 EchoTik 商品列表 API。
